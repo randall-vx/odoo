@@ -110,14 +110,17 @@ class MyFilterMessages(Transform):
     Custom docutils transform to remove `system message` for a document and
     generate warnings.
 
-    (The standard filter removes them based on some `report_level` passed in
-    the `settings_override` dictionary, but if we use it, we can't see them
-    and generate warnings.)
+    Compatible with docutils 0.17 (Python <3.11) and 0.20.1 (Python >=3.11).
     """
     default_priority = 870
 
     def apply(self):
-        for node in self.document.traverse(nodes.system_message):
+        if hasattr(self.document, 'findall'):
+            nodes_iter = self.document.findall(nodes.system_message)
+        else:
+            nodes_iter = self.document.traverse(nodes.system_message)
+
+        for node in nodes_iter:
             _logger.warning("docutils' system message present: %s", str(node))
             node.parent.remove(node)
 
